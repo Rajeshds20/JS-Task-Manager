@@ -24,7 +24,7 @@
     </div>
 
     <h1>Your Tasks :</h1>
-    <div class=" filter-select">
+    <div class="filter-select">
         <p style="font-weight: 700;">Filter Tasks :</p>
 
         <div style="margin-top: 20px;">
@@ -41,6 +41,22 @@
             <label for="shopping">Shopping</label>
         </div>
     </div>
+
+    <div class="filter-select">
+        <p style="font-weight: 700;">Filter by Status :</p>
+
+        <div style="margin-top: 20px;">
+            <input type="radio" id="alls" name="complete" value="all" checked>
+            <label for="alls">All</label>
+
+            <input type="radio" id="completed" name="complete" value="completed">
+            <label for="completed">Complete</label>
+
+            <input type="radio" id="incomplete" name="complete" value="incomplete">
+            <label for="incomplete">Incomplete</label>
+        </div>
+    </div>
+
     <div id="task-list">
         <!-- Task items will be displayed here -->
     </div>

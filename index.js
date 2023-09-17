@@ -11,8 +11,9 @@ class Task {
 
 // Task list
 let tasks = [];
-
-let showtasks = tasks.slice();
+let filterCategory = 'all';
+let filterStatus = false;
+let showComplete = false;
 
 // Function to add a task
 function addTask() {
@@ -29,6 +30,7 @@ function addTask() {
         const task = new Task(taskName, taskCategory, taskPriority, taskDueDate);
         tasks.push(task);
         updateTaskList();
+        saveTasksToLocalStorage();
     } catch (error) {
         alert("Error: " + error);
     } finally {
@@ -37,15 +39,15 @@ function addTask() {
 }
 
 // Function to update the task list
-function updateTaskList(category = "all") {
+function updateTaskList() {
     const taskList = document.getElementById("task-list");
     // console.log("Task List : ", taskList);
     taskList.innerHTML = "";
 
-    switch (category) {
+    switch (filterCategory) {
         case "work":
             tasks.forEach((task, index) => {
-                if (task.category === "work") {
+                if (task.category === "work" && (!filterStatus || showComplete === task.completed)) {
                     const taskItem = document.createElement("div");
                     taskItem.classList.add("task-item");
                     taskItem.classList.add(`${task.category}`);
@@ -72,7 +74,7 @@ function updateTaskList(category = "all") {
             break;
         case "personal":
             tasks.forEach((task, index) => {
-                if (task.category === "personal") {
+                if (task.category === "personal" && (!filterStatus || showComplete === task.completed)) {
                     const taskItem = document.createElement("div");
                     taskItem.classList.add("task-item");
                     taskItem.classList.add(`${task.category}`);
@@ -99,7 +101,7 @@ function updateTaskList(category = "all") {
             break;
         case "shopping":
             tasks.forEach((task, index) => {
-                if (task.category === "shopping") {
+                if (task.category === "shopping" && (!filterStatus || showComplete === task.completed)) {
                     const taskItem = document.createElement("div");
                     taskItem.classList.add("task-item");
                     taskItem.classList.add(`${task.category}`);
@@ -126,28 +128,34 @@ function updateTaskList(category = "all") {
             break;
         default:
             tasks.forEach((task, index) => {
-                const taskItem = document.createElement("div");
-                taskItem.classList.add("task-item");
-                taskItem.classList.add(`${task.category}`);
-                taskItem.innerHTML = `
+                if (!filterStatus || showComplete === task.completed) {
+                    const taskItem = document.createElement("div");
+                    taskItem.classList.add("task-item");
+                    taskItem.classList.add(`${task.category}`);
+                    taskItem.innerHTML = `
                 <p>Name: ${task.name}</p>
                 <p>Category: ${task.category}</p>
                 <p>Priority: ${task.priority}</p>
                 <p>Due Date: ${task.dueDate}</p>
             `;
-                if (!task.completed) {
-                    taskItem.innerHTML += `
+                    if (!task.completed) {
+                        taskItem.innerHTML += `
                     <button onclick="completeTask(${index})">Complete</button>
                 `;
-                }
-                else if (task.completed) {
-                    taskItem.innerHTML += `
+                    }
+                    else if (task.completed) {
+                        taskItem.innerHTML += `
                     <p class="completed">✔️Completed</p>
                 `;
-                }
+                    }
 
-                taskList.appendChild(taskItem);
+                    taskList.appendChild(taskItem);
+                }
             });
+            break;
+    }
+    if (taskList.innerHTML === "") {
+        taskList.innerHTML = "<p>No tasks to display</p>";
     }
 }
 
@@ -155,6 +163,20 @@ function updateTaskList(category = "all") {
 function completeTask(index) {
     tasks[index].completed = true;
     updateTaskList();
+    saveTasksToLocalStorage();
+}
+
+function saveTasksToLocalStorage() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function loadTasksFromLocalStorage() {
+    const storedTasks = localStorage.getItem('tasks');
+    console.log("Stored Tasks : ", storedTasks);
+    if (storedTasks) {
+        tasks = JSON.parse(storedTasks);
+        updateTaskList();
+    }
 }
 
 // Function to clear input fields
@@ -164,18 +186,29 @@ function clearFields() {
     document.getElementById("task-due-date").value = "";
 }
 
-function filterTasks(filterValue) {
-    if (filterValue === "all") {
-        return tasks;
-    } else {
-        return tasks.filter(task => task.category === filterValue);
-    }
-}
-
 function displayFilteredTasks() {
     const selectedFilter = document.querySelector('input[name="filter"]:checked').value;
     // console.log("Selecte Filter :", selectedFilter);
-    updateTaskList(selectedFilter);
+    filterCategory = selectedFilter;
+    updateTaskList();
+}
+
+function displayFilterByStatus() {
+    const selectedFilter = document.querySelector('input[name="complete"]:checked').value;
+    console.log("Selecte Filter :", selectedFilter);
+    if (selectedFilter === 'all') {
+        filterStatus = false;
+        showComplete = false;
+        updateTaskList();
+    } else if (selectedFilter === 'completed') {
+        filterStatus = true;
+        showComplete = true;
+        updateTaskList();
+    } else if (selectedFilter === 'incomplete') {
+        filterStatus = true;
+        showComplete = false;
+        updateTaskList();
+    }
 }
 
 // Event listener for filter radio buttons
@@ -184,5 +217,11 @@ filterRadios.forEach(radio => {
     radio.addEventListener('change', displayFilteredTasks);
 });
 
+const filterByStatusRadios = document.querySelectorAll('input[name="complete"]');
+filterByStatusRadios.forEach(radio => {
+    radio.addEventListener('change', displayFilterByStatus);
+});
+
+
 // Initialize the task list
-updateTaskList();
+loadTasksFromLocalStorage();
